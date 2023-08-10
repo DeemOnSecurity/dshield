@@ -146,10 +146,9 @@ def hydrate_tables():
     settings.DATABASE_SESSION.query(Signature).delete()
     settings.DATABASE_SESSION.query(Response).delete()
 
-    # deepcode ignore SSLVerificationBypass: We do not want to verify SSL with the honeypot
     resp = requests.get(
         f'{settings.DSHIELD_URL}/api/honeypotrules/',
-        verify=False
+        verify=True
     )
 
     if not resp.ok:
@@ -190,7 +189,10 @@ def prepare_database():
     create_tables()
     hydrate_tables()
 
-def read_db_and_log(file_name="/srv/db/webhoneypot.json"):
+def read_db_and_log(file_name=""):
+    if file_name == '':
+        todaydate = datetime.datetime.today().strftime('%Y-%m-%d')
+        file_name = f"/srv/db/webhoneypot-{todaydate}.json";
     logs = []
     for instance in settings.DATABASE_SESSION.query(RequestLog).order_by(RequestLog.id):
         signature = settings.DATABASE_SESSION.query(Signature).filter(Signature.id == instance.signature_id).first()
